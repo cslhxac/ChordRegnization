@@ -2,9 +2,10 @@ function [ resampledAudio,FD,newFs ] = FrequencyDomainTransform(audio,Fs)
     %FREQUENCYDOMAINTRANSFORM Summary of this function goes here
     %   Detailed explanation goes here
     samplingRate = 11025;
-    newFs = samplingRate;
     window = 4096;
     hop = 512;
+    newFs = samplingRate;
+
     w = 0.54 - 0.46 * cos(2 * pi * (0:(window-1)) / (window-1));
 
     if(Fs > samplingRate)

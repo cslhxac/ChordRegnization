@@ -3,7 +3,7 @@ function [gw] = Gw()
     low1 = 27;
     low2 = 33;
     high1 = 68;
-    high2 = 92
+    high2 = 92;
     for i = low1:low2
         gw(i) = (i - low1)/(low2 - low1);
     end
