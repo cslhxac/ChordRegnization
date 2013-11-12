@@ -70,3 +70,5 @@ end
 for m = 1:size(beat,2) - 1
 	Ct_sync(:,m) = Ct_sync(:,m) / max(Ct_sync(:,m));
 end
+Ct_sync(isnan(Ct_sync)) = 0;
+[keyMajor, keyMinor] = keyDetection(Ct_sync);
