@@ -75,7 +75,7 @@ end
 for m = 1:size(beat,2) - 1
 	Ct_sync(:,m) = Ct_sync(:,m) / max(Ct_sync(:,m));
 end
-<<<<<<< HEAD
+
 
 Cb_sync = zeros(13,size(beat,2) - 1);
 for j = 1:12;
@@ -88,6 +88,9 @@ for m = 1:size(beat,2) - 1
 	Cb_sync(1:12,m) = Cb_sync(1:12,m) / max(Cb_sync(1:12,m));
     Cb_sync(13,m) = (sum(Cb_sync(1:12,m)) / max(Cb_sync(1:12,m)))^2/12;
 end
+
+Ct_sync(isnan(Ct_sync)) = 0;
+[keyMajor, keyMinor] = keyDetection(Ct_sync);
 
 [ chordClasses ] = ChordClassGenerator();
 %%
@@ -109,7 +112,6 @@ end
 addpath 'matlab-midi-master/src/'
 midi_new = matrix2midi(midiMatrix);
 writemidi(midi_new, 'testout.mid');
-=======
-Ct_sync(isnan(Ct_sync)) = 0;
-[keyMajor, keyMinor] = keyDetection(Ct_sync);
->>>>>>> f63c8abd95c3252d3dc5623415d3fcabac9c54e5
+
+
+
