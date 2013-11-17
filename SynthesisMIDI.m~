@@ -1,0 +1,20 @@
+function [ midiMatrix ] = SynthesisMIDI( chroma,beat )
+%SYNTHESESMIDI Summary of this function goes here
+%   Detailed explanation goes here
+%the beat should be the same size as chroma.
+
+N = size(chroma > 0);
+midiMatrix = zeros(N,6);
+counter = 1;
+for m = 1:size(chroma,2)
+    for j = 1:12
+    midiMatrix(m,1) = 1;         % all in track 1
+    midiMatrix(:,2) = 1;         % all in channel 1
+    M(:,3) = (60:72)';      % note numbers: one ocatave starting at middle C (60)
+    M(:,4) = round(linspace(80,120,N))';  % lets have volume ramp up 80->120
+    M(:,5) = (.5:.5:6.5)';  % note on:  notes start every .5 seconds
+    M(:,6) = M(:,5) + .5;   % note off: each note has duration .5 seconds 
+end
+
+end
+

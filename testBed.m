@@ -4,8 +4,12 @@ window = 4096;
 hop = 512;
     
 [y,Fs] = audioread('test.mp3');
-
-[ resampledAudio,FD ] = FrequencyDomainTransform(y,Fs);
+%%cast y to one channel!!!
+y_new = zeros(size(y,1),1);
+for i = 1 : size(y,2)
+    y_new(:) = y_new(:) + y(:,i);
+end
+[ resampledAudio,FD ] = FrequencyDomainTransform(y_new,Fs);
 M_s = Ms();
 M_c = Mc();
 S_s = S(M_s,FD);
@@ -57,16 +61,50 @@ for i = 1:12
 end
 
 beat = beat2(resampledAudio,11025);
+beatSec = beat;
 %convert beat from sec to frame#
 beat = round(beat * samplingRate / hop);
 
 Ct_sync = zeros(12,size(beat,2) - 1);
 for j = 1:12;
     for m = 1:size(beat,2) - 1
-        Ct_sync(j,m) = median(Cw(j,beat(m):(beat(m+1)-1)));
+        Ct_sync(j,m) = median(Ct(j,beat(m):(beat(m+1)-1)));
     end
 end
 
 for m = 1:size(beat,2) - 1
 	Ct_sync(:,m) = Ct_sync(:,m) / max(Ct_sync(:,m));
 end
+
+Cb_sync = zeros(13,size(beat,2) - 1);
+for j = 1:12;
+    for m = 1:size(beat,2) - 1
+        Cb_sync(j,m) = median(Cb(j,beat(m):(beat(m+1)-1)));
+    end
+end
+
+for m = 1:size(beat,2) - 1
+	Cb_sync(1:12,m) = Cb_sync(1:12,m) / max(Cb_sync(1:12,m));
+    Cb_sync(13,m) = (sum(Cb_sync(1:12,m)) / max(Cb_sync(1:12,m)))^2/12;
+end
+
+[ chordClasses ] = ChordClassGenerator();
+%%
+%%now iterate through the chords to find the best chord match
+%%
+chordChroma = zeros(12,size(beat,2) - 1);
+for m = 1:size(beat,2) - 1
+    previouScore = 0;
+    for j = 1:size(chordClasses,2)
+        score = Ct_sync(:,m)'* chordClasses(j).Signature';
+        if(score > previouScore)
+            chordChroma(:,m) = chordClasses(j).Signature';
+            previouScore = score;
+        end
+    end
+end
+
+[ midiMatrix ] = SynthesisMIDI( chordChroma,beatSec );
+addpath 'matlab-midi-master/src/'
+midi_new = matrix2midi(midiMatrix);
+writemidi(midi_new, 'testout.mid');
