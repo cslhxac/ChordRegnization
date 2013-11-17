@@ -3,8 +3,8 @@ function [ keyMaj, keyMin ] = keyDetection( chroma )
 %   Detailed explanation goes here
 % Given the chroma of the music it output the possible key(Both maj and min)
 %%%%!!!!!!!!!!!The first key is A in the chroma!!!!!!!!!!!!%%%%%
-majSignature = [1 -1 1 -1 1 1 -1 1 -1  1 -1 1]';
-minSignature = [1 -1 1 1 -1 1 -1 1  1 -1  1 1]';%%The miner can both be harmonic or natual
+majSignature = [1, -1, 1, -1, 1, 1, -1, 1, -1,  1, -1, 1]';
+minSignature = [1, -1, 1,  1,-1, 1, -1, 1,  1, -1,  1, 1]';%%The miner can both be harmonic or natual
 
 scoreMajor = zeros(1,12);
 scoreMinor = zeros(1,12);

@@ -75,6 +75,7 @@ end
 for m = 1:size(beat,2) - 1
 	Ct_sync(:,m) = Ct_sync(:,m) / max(Ct_sync(:,m));
 end
+<<<<<<< HEAD
 
 Cb_sync = zeros(13,size(beat,2) - 1);
 for j = 1:12;
@@ -108,3 +109,7 @@ end
 addpath 'matlab-midi-master/src/'
 midi_new = matrix2midi(midiMatrix);
 writemidi(midi_new, 'testout.mid');
+=======
+Ct_sync(isnan(Ct_sync)) = 0;
+[keyMajor, keyMinor] = keyDetection(Ct_sync);
+>>>>>>> f63c8abd95c3252d3dc5623415d3fcabac9c54e5
