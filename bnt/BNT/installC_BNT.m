@@ -1,4 +1,4 @@
-BNT_HOME = '/home/ai2/murphyk/matlab/FullBNT'; % edit this
+BNT_HOME = '/Users/ron/ChordRegnization/bnt'; % edit this
 
 d = fullfile(BNT_HOME, 'BNT');
 %PC = (strncmp(computer,'PC',2));

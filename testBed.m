@@ -110,8 +110,26 @@ end
 
 [ midiMatrix ] = SynthesisMIDI( chordChroma,beatSec );
 addpath 'matlab-midi-master/src/'
+
 midi_new = matrix2midi(midiMatrix);
 writemidi(midi_new, 'testout.mid');
+
+[ chordwBass ] = simpleDBNDetection(chordClasses,Cb_sync,Ct_sync,keyMajor,keyMinor);
+
+[ midiMatrix ] = SynthesisMIDI( chordwBass,beatSec );
+addpath 'matlab-midi-master/src/'
+
+midi_new = matrix2midi(midiMatrix);
+writemidi(midi_new, 'testout.mid');
+
+
+
+a = midi2audio(midi_new);
+tmp = zeros(size(y_new));
+tmp(1:10195215) = a;
+wavwrite(y_new/2 + tmp/2,Fs,'v1.wav');
+
+addpath 'bnt/'
 
 
 
