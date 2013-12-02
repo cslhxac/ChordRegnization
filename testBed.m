@@ -126,7 +126,7 @@ writemidi(midi_new, 'testout.mid');
 
 a = midi2audio(midi_new);
 tmp = zeros(size(y_new));
-tmp(1:10195215) = a;
+tmp(1:size(a,2)) = a;
 wavwrite(y_new/2 + tmp/2,Fs,'v1.wav');
 
 addpath 'bnt/'
