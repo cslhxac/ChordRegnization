@@ -115,10 +115,7 @@ midi_new = matrix2midi(midiMatrix);
 writemidi(midi_new, 'testout.mid');
 
 [ chordwBass ] = simpleDBNDetection(chordClasses,Cb_sync,Ct_sync,keyMajor,keyMinor);
-
 [ midiMatrix ] = SynthesisMIDI( chordwBass,beatSec );
-addpath 'matlab-midi-master/src/'
-
 midi_new = matrix2midi(midiMatrix);
 writemidi(midi_new, 'testout.mid');
 
