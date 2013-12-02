@@ -1,13 +1,29 @@
-﻿Build started 12/1/2013 8:50:47 PM.
+﻿Build started 12/3/2013 8:38:22 PM.
      1>Project "C:\Users\Ron\Documents\GitHub\ChordRegnization\bnt_C\bnt_C.vcxproj" on node 2 (Build target(s)).
      1>ClCompile:
-         C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\CL.exe /c /Zi /nologo /W3 /WX- /Od /Oy- /D WIN32 /D _DEBUG /D _CONSOLE /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc110.pdb" /Gd /TP /analyze- /errorReport:prompt Source.cpp
+         C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\CL.exe /c /I"C:\Program Files\MATLAB\R2013b\extern\include" /Zi /nologo /W3 /WX- /Od /Oy- /D WIN32 /D _DEBUG /D _CONSOLE /D _WINDLL /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc110.pdb" /Gd /TP /analyze- /errorReport:prompt /export:mexFunction CreateFactorGraph.cpp Source.cpp
+     1>cl : Command line warning D9002: ignoring unknown option '/export:mexFunction'
          Source.cpp
+     1>c:\users\ron\documents\github\chordregnization\bnt_c\FactorGraph.hpp(44): warning C4018: '<' : signed/unsigned mismatch
+     1>c:\users\ron\documents\github\chordregnization\bnt_c\FactorGraph.hpp(48): warning C4018: '<' : signed/unsigned mismatch
+         CreateFactorGraph.cpp
+     1>c:\users\ron\documents\github\chordregnization\bnt_c\FactorGraph.hpp(44): warning C4018: '<' : signed/unsigned mismatch
+     1>c:\users\ron\documents\github\chordregnization\bnt_c\FactorGraph.hpp(48): warning C4018: '<' : signed/unsigned mismatch
+         Generating Code...
        Link:
-         C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"C:\Users\Ron\Documents\GitHub\ChordRegnization\bnt_C\Debug\bnt_C.exe" /INCREMENTAL /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"C:\Users\Ron\Documents\GitHub\ChordRegnization\bnt_C\Debug\bnt_C.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:\Users\Ron\Documents\GitHub\ChordRegnization\bnt_C\Debug\bnt_C.lib" /MACHINE:X86 Debug\Source.obj
-         bnt_C.vcxproj -> C:\Users\Ron\Documents\GitHub\ChordRegnization\bnt_C\Debug\bnt_C.exe
-     1>Done Building Project "C:\Users\Ron\Documents\GitHub\ChordRegnization\bnt_C\bnt_C.vcxproj" (Build target(s)).
+         C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"C:\Users\Ron\Documents\GitHub\ChordRegnization\bnt_C\Debug\bnt_C.mexw64" /INCREMENTAL /NOLOGO /LIBPATH:"C:\Program Files\MATLAB\R2013b\extern\lib\win64\microsoft" libmx.lib libmex.lib libmat.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"C:\Users\Ron\Documents\GitHub\ChordRegnization\bnt_C\Debug\bnt_C.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:\Users\Ron\Documents\GitHub\ChordRegnization\bnt_C\Debug\bnt_C.lib" /MACHINE:X86 /DLL Debug\CreateFactorGraph.obj
+         Debug\Source.obj
+         LINK : C:\Users\Ron\Documents\GitHub\ChordRegnization\bnt_C\Debug\bnt_C.mexw64 not found or not built by the last incremental link; performing full link
+     1>CreateFactorGraph.obj : error LNK2019: unresolved external symbol _mxGetDimensions_730 referenced in function _mexFunction
+     1>CreateFactorGraph.obj : error LNK2019: unresolved external symbol _mxGetNumberOfElements referenced in function _mexFunction
+     1>CreateFactorGraph.obj : error LNK2019: unresolved external symbol _mxGetPr referenced in function _mexFunction
+     1>CreateFactorGraph.obj : error LNK2019: unresolved external symbol _mxGetM referenced in function _mexFunction
+     1>CreateFactorGraph.obj : error LNK2019: unresolved external symbol _mxGetN referenced in function _mexFunction
+     1>CreateFactorGraph.obj : error LNK2019: unresolved external symbol _mxGetCell_730 referenced in function _mexFunction
+     1>CreateFactorGraph.obj : error LNK2019: unresolved external symbol _mexPrintf referenced in function _mexFunction
+     1>C:\Users\Ron\Documents\GitHub\ChordRegnization\bnt_C\Debug\bnt_C.mexw64 : fatal error LNK1120: 7 unresolved externals
+     1>Done Building Project "C:\Users\Ron\Documents\GitHub\ChordRegnization\bnt_C\bnt_C.vcxproj" (Build target(s)) -- FAILED.
 
-Build succeeded.
+Build FAILED.
 
-Time Elapsed 00:00:01.30
+Time Elapsed 00:00:01.76
