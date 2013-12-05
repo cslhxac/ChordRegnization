@@ -6,6 +6,40 @@
 #ifndef FACTORGRAPH
 #define FACTORGRAPH
 using namespace std;
+int get1DindexFromND(const mwSize nDimensions,const mwSize* d,const vector<int> indices){
+	int tmp = indices[nDimensions - 1];
+	for(int i = (nDimensions - 2);i >= 0;--i){
+		tmp = tmp * d[i] + indices[i];
+	}
+	return tmp;
+}
+int get1DindexFromND(const int nDimensions,const vector<int> d,const vector<int> indices){
+	int tmp = indices[nDimensions - 1];
+	for(int i = (nDimensions - 2);i >= 0;--i){
+		tmp = tmp * d[i] + indices[i];
+	}
+	return tmp;
+}
+vector<int> getNDindexFrom1D(const mwSize nDimensions,const mwSize* d,const int indices){
+	vector<int> indicesT;
+	indicesT.resize(nDimensions);
+	int tmp = indices;
+	for(int i = 0;i < nDimensions;++i){
+		indicesT[i] = tmp%d[i];
+		tmp /= d[i];
+	}
+	return indicesT;
+}
+vector<int> getNDindexFrom1D(const int nDimensions,const vector<int> d,const int indices){
+	vector<int> indicesT;
+	indicesT.resize(nDimensions);
+	int tmp = indices;
+	for(int i = 0;i < nDimensions;++i){
+		indicesT[i] = tmp%d[i];
+		tmp /= d[i];
+	}
+	return indicesT;
+}
 struct Node{
 	string name;
     int nValues;
@@ -81,6 +115,33 @@ public:
 			mexPrintf("Factor %i:\n",i);
 			for(int j = 0;j < factors[i] -> nodes.size();++j){
 				mexPrintf("\tNode %i: %i\n",factors[i] -> nodes[j],nodes[factors[i] -> nodes[j]] -> nValues);
+			}
+		}
+		mexPrintf("Likelihood\n");
+		for(int i = 0;i < nodes.size();++i){
+			mexPrintf("Node %i Likelihood: ",i);
+			for(int j = 0;j < nodes[i]->likelihood.size();++j){
+				mexPrintf("%f ",nodes[i]->likelihood[j]);
+			}
+			mexPrintf("\n");
+		}
+		mexPrintf("Factor Tendency\n");
+		for(int i = 0;i < factors.size();++i){
+			mexPrintf("Factor %i Tendency: \n",i);
+			int nElements = 1;
+			vector<int> d;
+			d.resize(factors[i] -> nodes.size());
+			for(int j = 0;j < factors[i] -> nodes.size();++j){
+				nElements *= nodes[factors[i] -> nodes[j]] -> nValues;
+				d[j] = nodes[factors[i] -> nodes[j]] -> nValues;
+			}
+			for(int j = 0;j < nElements;++j){
+				vector<int> indices = getNDindexFrom1D(factors[i] -> nodes.size(),d,j);
+				mexPrintf("<");
+				for(int k = 0;k < indices.size();++k){
+					mexPrintf("%i ",indices[k]);
+				}
+				mexPrintf(">: %f\n",factors[i] -> tendency[indices]);
 			}
 		}
 	}

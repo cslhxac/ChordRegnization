@@ -1,22 +1,6 @@
 #include"FactorGraph.hpp"
 #include <mex.h>
 
-int get1DindexFromND(const mwSize nDimensions,const mwSize* d,const vector<int> indices){
-	int tmp = indices[nDimensions - 1];
-	for(int i = (nDimensions - 2);i >= 0;--i){
-		tmp = tmp * d[i] + indices[i];
-	}
-}
-vector<int> getNDindexFrom1D(const mwSize nDimensions,const mwSize* d,const int indices){
-	vector<int> indicesT;
-	indicesT.resize(nDimensions);
-	int tmp = indices;
-	for(int i = 0;i < nDimensions;++i){
-		indicesT[i] = tmp%d[i];
-		tmp /= d[i];
-	}
-	return indicesT;
-}
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
 	//prhs[0] is the factor matrix cell array
@@ -62,7 +46,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	//mexPrintf("factorM,nValues: %i,%i\n",factorM.size(),nValues.size());
 	//assert(m == 1);
 	FactorGraph* FG = new FactorGraph(factorMt,nValuest);
-	FG -> print();
 	//Get the Likelihood
 	int nNodes = mxGetNumberOfElements(NODELIKELIHOOD);
 	vector<vector<double>> nodeLikelihoodV;
@@ -97,4 +80,5 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		}
 		FG -> setFactorTendency(i,tendencyMap);
 	}
+	FG -> print();
 }
