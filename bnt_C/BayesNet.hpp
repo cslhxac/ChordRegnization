@@ -46,38 +46,16 @@ struct Node{
   bool isEvidence;
   vector<double> prior;//For nodes without parents, it is the prior.It is the likelihood for the evidences
   map<vector<int>,double> CPD;
-  vector<Node*> parents;
-  vector<Node*> children;
+  vector<int> parents;
+  vector<int> children;
   Node(int n,string name_in = ""):nValues(n),name(name_in),isEvidence(false){
     prior.resize(n);
-    MSG.resize(n);
-    MSGNext.resize(n);
     for(int i = 0;i < n;++i){
       prior[i] = 1;
     }
   }
 };
-struct Factor{
-  vector<int> nodes;
-  map<vector<int>,double> tendency;
-  Factor(const vector<int> & nodes_in):nodes(nodes_in){
-  }
-  double getValue(const vector<int> values){
-    if(values.size() != nodes.size()){
-      cerr << "Factor::getValue: index, node size mismatch!" << endl;
-      return 0;
-    }
-    return tendency[values];
-  }
-  void setValue(const vector<int> values,double v){
-    if(values.size() != nodes.size()){
-      cerr << "Factor::getValue: index, node size mismatch!" << endl;
-      return;
-    }
-    tendency[values] = v;
-  }
-};
-class BaeysNet{
+class BayesNet{
 public:
   BayesNet(const vector<vector<int>>& parentList,const vector<vector<int>>& childrenList,const vector<int>& nValues){
     nodes.resize(nValues.size());
@@ -112,68 +90,55 @@ public:
     for(int i = 0;i < nodes.size();++i){
       mexPrintf("Node %i:\n",i);
       mexPrintf("\tParentList:");
-      for(int j = 0;j < nodes[i] -> parentList.size();++j){
-	mexPrintf("\t\tNode %i\n",nodes[i] -> parents[j]);
+      for(int j = 0;j < nodes[i] -> parents.size();++j){
+	    mexPrintf("\t\tNode %i\n",nodes[i] -> parents[j]);
       }
       mexPrintf("\tChildrenList:");
-      for(int j = 0;j < nodes[i] -> childrenList.size();++j){
-	mexPrintf("\t\tNode %i\n",nodes[i] -> children[j]);
+      for(int j = 0;j < nodes[i] -> children.size();++j){
+	    mexPrintf("\t\tNode %i\n",nodes[i] -> children[j]);
       } 
     }
     mexPrintf("Likelihood\n");
     for(int i = 0;i < nodes.size();++i){
       mexPrintf("Node %i Likelihood: ",i);
       for(int j = 0;j < nodes[i]->prior.size();++j){
-	mexPrintf("%f ",nodes[i]->prior[j]);
+	    mexPrintf("%f ",nodes[i]->prior[j]);
       }
       mexPrintf("\n");
     }
     mexPrintf("CPD\n");
     for(int i = 0;i < nodes.size();++i){
-      mexPrintf("node %i CPD: \n",i);
-      int nElements = 1;
-      vector<int> d;
-      d.resize(nodes[i] -> parentList.size());
-      for(int j = 0;j < factors[i] -> nodes.size();++j){
-	nElements *= nodes[factors[i] -> nodes[j]] -> nValues;
-	d[j] = nodes[factors[i] -> nodes[j]] -> nValues;
-      }
-      for(int j = 0;j < nElements;++j){
-	vector<int> indices = getNDindexFrom1D(factors[i] -> nodes.size(),d,j);
-	mexPrintf("<");
-	for(int k = 0;k < indices.size();++k){
-	  mexPrintf("%i ",indices[k]);
-	}
-	mexPrintf(">: %f\n",factors[i] -> tendency[indices]);
-      }
+      if(nodes[i] -> parents.size() > 0){
+        mexPrintf("node %i CPD: \n",i);
+        int nElements = 1;
+        vector<int> d;
+        d.resize(nodes[i] -> parents.size());
+        for(int j = 0;j < nodes[i] -> CPD.size();++j){
+		  nElements *= nodes[nodes[i] -> parents[j]] -> nValues;
+	      d[j] = nodes[nodes[i] -> parents[j]] -> nValues;
+        }
+        for(int j = 0;j < nElements;++j){
+	      vector<int> indices = getNDindexFrom1D(nodes[i] -> parents.size(),d,j);
+	      mexPrintf("<");
+	      for(int k = 0;k < indices.size();++k){
+	        mexPrintf("%i ",indices[k]);
+	      }
+	      mexPrintf(">: %f\n",nodes[i] -> CPD[indices]);
+        }
+	  }
     }
   }
-  const int maxItr = 10;
+  static const int maxItr = 10;
   void beliefPropagation(){
     for(int i = 0;i < maxItr;++i){
-      for(int j = 0){
-	
-      }
     }
   };
 private:
   vector<Node*> nodes;
-  vector<Factor*> factors;
-  void initialingMSG(){
-    for(int i = 0;i < nodes.size();++i){
-      nodes[i] -> MSG = nodes[i] -> prior;
-    }
-  };
-  void resetMSGNext(){
-    for(int i = 0;i < nodes.size();++i){
-      nodes[i] -> MSG = nodes[i] -> MSGNext;
-      nodes[i] -> MSGNext.assign(nodes[i] -> MSGNext.size(),1);
-    }
-  };
   void resetPrior(){
     for(int i = 0;i < nodes.size();++i){
       if(!nodes[i] -> isEvidence){
-	nodes[i] -> prior.assign(nodes[i] -> prior.size(),1);
+	    nodes[i] -> prior.assign(nodes[i] -> prior.size(),1);
       }
     }
   }

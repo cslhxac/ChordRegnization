@@ -7,8 +7,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	//prhs[1] is the array of number of possible values
 	//Make prhs[0] and prhs[1] DOUBLE arrays!!!!
 	//EVERY INDEX IN THOUSE MATRICES ARE STARTED FROM 0!!!!!!!!!!!!!
-        #define PARENTLIST prhs[0]
-        #define CHILDRENLIST prhs[1]
+    #define PARENTLIST prhs[0]
+    #define CHILDRENLIST prhs[1]
 	#define NODESNVALUES prhs[2]
 	//NODELIKELIHOOD is a cell array
 	#define NODELIKELIHOOD prhs[3]
@@ -25,35 +25,39 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		mwSize n = mxGetN(mxGetCell(PARENTLIST,i));
 		mwSize m = mxGetM(mxGetCell(PARENTLIST,i));
 		mwSize tsize = n*m;
-		parentListD[i] = vector<double>((double*) mxGetPr(mxGetCell(PARENTLIST,i)),(double*) mxGetPr(mxGetCell(PARENTLIST,i)) + tsize);
-		parentListI[i].resize(parentListD[i].size());
-		for(int j = 0;j < parentListD[i].size();++j){
-			parentListI[i][j] = parentListD[i][j];
+		if(tsize > 0){
+			parentListD[i] = vector<double>((double*) mxGetPr(mxGetCell(PARENTLIST,i)),(double*) mxGetPr(mxGetCell(PARENTLIST,i)) + tsize);
+			parentListI[i].resize(parentListD[i].size());
+			for(int j = 0;j < parentListD[i].size();++j){
+				parentListI[i][j] = parentListD[i][j];
+			}
 		}
 		//mexPrintf("Factor %i: %i,%i\n",i,mxGetN(mxGetCell(prhs[0],i)),mxGetM(mxGetCell(prhs[0],i)));
 		//assert(mxGetM(mxGetCell(prhs[0],i)) == 1);
 	}
-        int nChildren = mxGetNumberOfElements(CHILDRENLIST);
-        vector<vector<double>> childrenListD;
-        vector<vector<int>> childrenListI;
-        childrenListD.resize(nChildren);
-        childrenListI.resize(nChildren);
-        for(int i = 0;i < nChildren;i++){
+    int nChildren = mxGetNumberOfElements(CHILDRENLIST);
+    vector<vector<double>> childrenListD;
+    vector<vector<int>> childrenListI;
+    childrenListD.resize(nChildren);
+    childrenListI.resize(nChildren);
+    for(int i = 0;i < nChildren;i++){
 	  mwSize n = mxGetN(mxGetCell(CHILDRENLIST,i));
 	  mwSize m = mxGetM(mxGetCell(CHILDRENLIST,i));
 	  mwSize tsize = n*m;
-	  childrenListD[i] = vector<double>((double*) mxGetPr(mxGetCell(CHILDRENLIST,i)),(double*) mxGetPr(mxGetCell(CHILDRENLIST,i)) + tsize);
-	  childrenListI[i].resize(childrenListD[i].size());
-	  for(int j = 0;j < childrenListD[i].size();++j){
-	    childrenListI[i][j] = childrenListD[i][j];
+	  if(tsize > 0){
+		 childrenListD[i] = vector<double>((double*) mxGetPr(mxGetCell(CHILDRENLIST,i)),(double*) mxGetPr(mxGetCell(CHILDRENLIST,i)) + tsize);
+		 childrenListI[i].resize(childrenListD[i].size());
+		 for(int j = 0;j < childrenListD[i].size();++j){
+			childrenListI[i][j] = childrenListD[i][j];
+		}
 	  }
 	  //mexPrintf("Factor %i: %i,%i\n",i,mxGetN(mxGetCell(prhs[0],i)),mxGetM(mxGetCell(prhs[0],i)));                    
 	  //assert(mxGetM(mxGetCell(prhs[0],i)) == 1);                                                                      
-        }
-	mwSize n = mxGetN(NODENVALUES);
-	mwSize m = mxGetM(NODENVALUES);
+	}
+	mwSize n = mxGetN(NODESNVALUES);
+	mwSize m = mxGetM(NODESNVALUES);
 	mwSize tsize = n*m;
-	vector<double> nValues = vector<double>((double*) mxGetPr(NODENVALUES),(double*) mxGetPr(NODEVALUES) + tsize);
+	vector<double> nValues = vector<double>((double*) mxGetPr(NODESNVALUES),(double*) mxGetPr(NODESNVALUES) + tsize);
 	vector<int> nValuest;
 	nValuest.resize(nValues.size());
 	for(int i = 0;i < nValues.size();i++){
@@ -63,7 +67,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 	//mexPrintf("factorM,nValues: %i,%i\n",factorM.size(),nValues.size());
 	//assert(m == 1);
-	BayesNet* BN = new BayesNet(parentList,childrenList,nValuest);
+	BayesNet* BN = new BayesNet(parentListI,childrenListI,nValuest);
 	//Get the Likelihood
 	int nNodes = mxGetNumberOfElements(NODELIKELIHOOD);
 	vector<vector<double>> nodeLikelihoodV;
@@ -85,16 +89,18 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		map<vector<int>,double> CPDMap;
 		mwSize nDimensions = mxGetNumberOfDimensions(mxGetCell(CPDIN,i));
 		const mwSize* d = mxGetDimensions(mxGetCell(CPDIN,i));
-		if(nDimensions != BN -> getNode(i) -> nParent.size()){
-			mexPrintf("CPD node parent size mismatch");
+		mexPrintf("node %i: %i %i %i %i\n",i,BN -> getNode(i) -> parents.size(),nDimensions,d[0],d[1]);
+		if(nDimensions != 0 && d[0] != 0 && nDimensions != BN -> getNode(i) -> parents.size() + 1){
+			mexPrintf("CPD node parent size mismatch\n");
 			return;
 		}
 		int nElements = 1;
 		for(int j = 0;j < nDimensions;++j){
 			nElements *= d[j];
 		}
+		nElements *= BN -> getNode(i) -> nValues;	
 		for(int j = 0;j < nElements;++j){
-			CPDMap[getNDindexFrom1D(nDimensions,d,j)] = mxGetPr(mxGetCell(CPD,i))[j];
+			CPDMap[getNDindexFrom1D(nDimensions,d,j)] = mxGetPr(mxGetCell(CPDIN,i))[j];
 		}
 		BN -> setCPD(i,CPDMap);
 	}
