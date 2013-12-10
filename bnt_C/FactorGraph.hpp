@@ -44,11 +44,15 @@ struct Node{
 	string name;
     int nValues;
 	bool isEvidence;
-    vector<double> likelihood;
-    Node(int n,string name_in = ""):nValues(n),name(name_in){
-        likelihood.resize(n);
+    vector<double> prior;//For unobserved nodes, it is the prior.It is the likelihood for the evidences
+	vector<double> MSG;
+	vector<double> MSGNext;
+    Node(int n,string name_in = ""):nValues(n),name(name_in),isEvidence(false){
+        prior.resize(n);
+		MSG.resize(n);
+		MSGNext.resize(n);
 		for(int i = 0;i < n;++i){
-			likelihood[i] = 0;
+			prior[i] = 1;
 		}
     }
 };
@@ -93,14 +97,14 @@ public:
 			delete factors[i];
 		}
 	};
-	void setEvidenceList(vector<int> evidences){
+	void setEvidenceList(const vector<int>& evidences){
 		for(int i = 0;i < evidences.size();++i){
 			nodes[evidences[i]] -> isEvidence = true;
 		}
 	}
-	void setNodeLikelihood(const vector<vector<double>>& likelihood){
-		for(int i = 0;i < likelihood.size();++i){
-			nodes[i] -> likelihood = likelihood[i];
+	void setNodeLikelihood(const vector<vector<double>>& prior){
+		for(int i = 0;i < prior.size();++i){
+			nodes[i] -> prior = prior[i];
 		}
 	}
 	void setFactorTendency(int factorID,const map<vector<int>,double>& tendency){
@@ -114,14 +118,18 @@ public:
 		for(int i = 0;i < factors.size();++i){
 			mexPrintf("Factor %i:\n",i);
 			for(int j = 0;j < factors[i] -> nodes.size();++j){
-				mexPrintf("\tNode %i: %i\n",factors[i] -> nodes[j],nodes[factors[i] -> nodes[j]] -> nValues);
+				if(nodes[factors[i] -> nodes[j]] -> isEvidence){
+					mexPrintf("\tNode %i: %i evidence\n",factors[i] -> nodes[j],nodes[factors[i] -> nodes[j]] -> nValues);
+				}else{
+					mexPrintf("\tNode %i: %i\n",factors[i] -> nodes[j],nodes[factors[i] -> nodes[j]] -> nValues);
+				}
 			}
 		}
 		mexPrintf("Likelihood\n");
 		for(int i = 0;i < nodes.size();++i){
 			mexPrintf("Node %i Likelihood: ",i);
-			for(int j = 0;j < nodes[i]->likelihood.size();++j){
-				mexPrintf("%f ",nodes[i]->likelihood[j]);
+			for(int j = 0;j < nodes[i]->prior.size();++j){
+				mexPrintf("%f ",nodes[i]->prior[j]);
 			}
 			mexPrintf("\n");
 		}
@@ -145,9 +153,34 @@ public:
 			}
 		}
 	}
+	const int maxItr = 10;
+	void beliefPropagation(){
+		for(int i = 0;i < maxItr;++i){
+			for(int j = 0){
+				
+			}
+		}
+	};
 private:
 	vector<Node*> nodes;
 	vector<Factor*> factors;
-    
+    void initialingMSG(){
+		for(int i = 0;i < nodes.size();++i){
+			nodes[i] -> MSG = nodes[i] -> prior;
+		}
+	};
+	void resetMSGNext(){
+		for(int i = 0;i < nodes.size();++i){
+			nodes[i] -> MSG = nodes[i] -> MSGNext;
+			nodes[i] -> MSGNext.assign(nodes[i] -> MSGNext.size(),1);
+		}
+	};
+	void resetPrior(){
+		for(int i = 0;i < nodes.size();++i){
+			if(!nodes[i] -> isEvidence){
+				nodes[i] -> prior.assign(nodes[i] -> prior.size(),1);
+			}
+		}
+	}
 };
 #endif

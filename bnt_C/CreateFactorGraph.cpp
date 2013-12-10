@@ -6,12 +6,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	//prhs[0] is the factor matrix cell array
 	//prhs[1] is the array of number of possible values
 	//Make prhs[0] and prhs[1] DOUBLE arrays!!!!
+	//EVERY INDEX IN THOUSE MATRICES ARE STARTED FROM 0!!!!!!!!!!!!!
 	#define FACTORMATRIX prhs[0]
 	#define NODESNVALUES prhs[1]
 	//NODELIKELIHOOD is a cell array
 	#define NODELIKELIHOOD prhs[2]
 	//FACTORTENDENCY is a cell array
 	#define FACTORTENDENCY prhs[3]
+	#define EVIDENCELIST prhs[4]
 	//prhs[4] is the list of node names(optional)
 	const mwSize *dims0 = mxGetDimensions(prhs[0]);
 	const mwSize *dims1 = mxGetDimensions(prhs[1]);
@@ -80,5 +82,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		}
 		FG -> setFactorTendency(i,tendencyMap);
 	}
+	mwSize nEvidence = mxGetNumberOfElements(EVIDENCELIST);
+	double* evidenveListPr = mxGetPr(EVIDENCELIST);
+	vector<int> evidenveList;
+	evidenveList.resize(nEvidence);
+	for(int i = 0;i < nEvidence;++i){
+		evidenveList[i] = evidenveListPr[i];
+	}
+	FG -> setEvidenceList(evidenveList);
 	FG -> print();
 }
