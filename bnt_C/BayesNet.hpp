@@ -79,23 +79,18 @@ struct Factor{
 };
 class BaeysNet{
 public:
-  BayesNet(const vector<vector<int>>& factorM,const vector<int>& nValues){
+  BayesNet(const vector<vector<int>>& parentList,const vector<vector<int>>& childrenList,const vector<int>& nValues){
     nodes.resize(nValues.size());
     int itr;
     for(itr = 0;itr < nValues.size();++itr){
       nodes[itr] = new Node(nValues[itr]);
-    }
-    factors.resize(factorM.size());
-    for(itr = 0;itr < factorM.size();++itr){
-      factors[itr] = new Factor(factorM[itr]);
+      nodes[itr] -> parents = parentList[itr];
+      nodes[itr] -> children = childrenList[itr];
     }
   };
   ~BayesNet(){
     for(int i = 0;i < nodes.size();++i){
       delete nodes[i];
-    }
-    for(int i = 0;i < factors.size();++i){
-      delete factors[i];
     }
   };
   void setEvidenceList(const vector<int>& evidences){
@@ -108,23 +103,22 @@ public:
       nodes[i] -> prior = prior[i];
     }
   }
-  void setFactorTendency(int factorID,const map<vector<int>,double>& tendency){
-    factors[factorID] -> tendency = tendency;
+  void setCPD(int nodeID,const map<vector<int>,double>& CPD){
+    nodes[nodeID] -> CPD = CPD;
   }
   const Node* getNode(const int index)const{return nodes[index];};
-  const Factor* getFactor(const int index)const{return factors[index];};
-  int getnFactors()const{return factors.size();};
   int getnNodes()const{return nodes.size();};
   const void print()const{
-    for(int i = 0;i < factors.size();++i){
-      mexPrintf("Factor %i:\n",i);
-      for(int j = 0;j < factors[i] -> nodes.size();++j){
-	if(nodes[factors[i] -> nodes[j]] -> isEvidence){
-	  mexPrintf("\tNode %i: %i evidence\n",factors[i] -> nodes[j],nodes[factors[i] -> nodes[j]] -> nValues);
-	}else{
-	  mexPrintf("\tNode %i: %i\n",factors[i] -> nodes[j],nodes[factors[i] -> nodes[j]] -> nValues);
-	}
+    for(int i = 0;i < nodes.size();++i){
+      mexPrintf("Node %i:\n",i);
+      mexPrintf("\tParentList:");
+      for(int j = 0;j < nodes[i] -> parentList.size();++j){
+	mexPrintf("\t\tNode %i\n",nodes[i] -> parents[j]);
       }
+      mexPrintf("\tChildrenList:");
+      for(int j = 0;j < nodes[i] -> childrenList.size();++j){
+	mexPrintf("\t\tNode %i\n",nodes[i] -> children[j]);
+      } 
     }
     mexPrintf("Likelihood\n");
     for(int i = 0;i < nodes.size();++i){
@@ -134,12 +128,12 @@ public:
       }
       mexPrintf("\n");
     }
-    mexPrintf("Factor Tendency\n");
-    for(int i = 0;i < factors.size();++i){
-      mexPrintf("Factor %i Tendency: \n",i);
+    mexPrintf("CPD\n");
+    for(int i = 0;i < nodes.size();++i){
+      mexPrintf("node %i CPD: \n",i);
       int nElements = 1;
       vector<int> d;
-      d.resize(factors[i] -> nodes.size());
+      d.resize(nodes[i] -> parentList.size());
       for(int j = 0;j < factors[i] -> nodes.size();++j){
 	nElements *= nodes[factors[i] -> nodes[j]] -> nValues;
 	d[j] = nodes[factors[i] -> nodes[j]] -> nValues;

@@ -1,4 +1,4 @@
-#include"FactorGraph.hpp"
+#include"BayesNet.hpp"
 #include <mex.h>
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
@@ -7,37 +7,53 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	//prhs[1] is the array of number of possible values
 	//Make prhs[0] and prhs[1] DOUBLE arrays!!!!
 	//EVERY INDEX IN THOUSE MATRICES ARE STARTED FROM 0!!!!!!!!!!!!!
-	#define FACTORMATRIX prhs[0]
-	#define NODESNVALUES prhs[1]
+        #define PARENTLIST prhs[0]
+        #define CHILDRENLIST prhs[1]
+	#define NODESNVALUES prhs[2]
 	//NODELIKELIHOOD is a cell array
-	#define NODELIKELIHOOD prhs[2]
+	#define NODELIKELIHOOD prhs[3]
 	//FACTORTENDENCY is a cell array
-	#define FACTORTENDENCY prhs[3]
-	#define EVIDENCELIST prhs[4]
+	#define CPDIN prhs[4]
+	#define EVIDENCELIST prhs[5]
 	//prhs[4] is the list of node names(optional)
-	const mwSize *dims0 = mxGetDimensions(prhs[0]);
-	const mwSize *dims1 = mxGetDimensions(prhs[1]);
-	int nFactors = mxGetNumberOfElements(prhs[0]);
-	vector<vector<double>> factorM;
-	vector<vector<int>> factorMt;
-	factorM.resize(nFactors);
-	factorMt.resize(nFactors);
-	for(int i = 0;i < nFactors;i++){
-		mwSize n = mxGetN(mxGetCell(prhs[0],i));
-		mwSize m = mxGetM(mxGetCell(prhs[0],i));
+	int nParents = mxGetNumberOfElements(PARENTLIST);
+	vector<vector<double>> parentListD;
+	vector<vector<int>> parentListI;
+	parentListD.resize(nParents);
+	parentListI.resize(nParents);
+	for(int i = 0;i < nParents;i++){
+		mwSize n = mxGetN(mxGetCell(PARENTLIST,i));
+		mwSize m = mxGetM(mxGetCell(PARENTLIST,i));
 		mwSize tsize = n*m;
-		factorM[i] = vector<double>((double*) mxGetPr(mxGetCell(prhs[0],i)),(double*) mxGetPr(mxGetCell(prhs[0],i)) + tsize);
-		factorMt[i].resize(factorM[i].size());
-		for(int j = 0;j < factorM[i].size();++j){
-			factorMt[i][j] = factorM[i][j];
+		parentListD[i] = vector<double>((double*) mxGetPr(mxGetCell(PARENTLIST,i)),(double*) mxGetPr(mxGetCell(PARENTLIST,i)) + tsize);
+		parentListI[i].resize(parentListD[i].size());
+		for(int j = 0;j < parentListD[i].size();++j){
+			parentListI[i][j] = parentListD[i][j];
 		}
 		//mexPrintf("Factor %i: %i,%i\n",i,mxGetN(mxGetCell(prhs[0],i)),mxGetM(mxGetCell(prhs[0],i)));
 		//assert(mxGetM(mxGetCell(prhs[0],i)) == 1);
 	}
-	mwSize n = mxGetN(prhs[1]);
-	mwSize m = mxGetM(prhs[1]);
+        int nChildren = mxGetNumberOfElements(CHILDRENLIST);
+        vector<vector<double>> childrenListD;
+        vector<vector<int>> childrenListI;
+        childrenListD.resize(nChildren);
+        childrenListI.resize(nChildren);
+        for(int i = 0;i < nChildren;i++){
+	  mwSize n = mxGetN(mxGetCell(CHILDRENLIST,i));
+	  mwSize m = mxGetM(mxGetCell(CHILDRENLIST,i));
+	  mwSize tsize = n*m;
+	  childrenListD[i] = vector<double>((double*) mxGetPr(mxGetCell(CHILDRENLIST,i)),(double*) mxGetPr(mxGetCell(CHILDRENLIST,i)) + tsize);
+	  childrenListI[i].resize(childrenListD[i].size());
+	  for(int j = 0;j < childrenListD[i].size();++j){
+	    childrenListI[i][j] = childrenListD[i][j];
+	  }
+	  //mexPrintf("Factor %i: %i,%i\n",i,mxGetN(mxGetCell(prhs[0],i)),mxGetM(mxGetCell(prhs[0],i)));                    
+	  //assert(mxGetM(mxGetCell(prhs[0],i)) == 1);                                                                      
+        }
+	mwSize n = mxGetN(NODENVALUES);
+	mwSize m = mxGetM(NODENVALUES);
 	mwSize tsize = n*m;
-	vector<double> nValues = vector<double>((double*) mxGetPr(prhs[1]),(double*) mxGetPr(prhs[1]) + tsize);
+	vector<double> nValues = vector<double>((double*) mxGetPr(NODENVALUES),(double*) mxGetPr(NODEVALUES) + tsize);
 	vector<int> nValuest;
 	nValuest.resize(nValues.size());
 	for(int i = 0;i < nValues.size();i++){
@@ -47,7 +63,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 	//mexPrintf("factorM,nValues: %i,%i\n",factorM.size(),nValues.size());
 	//assert(m == 1);
-	FactorGraph* FG = new FactorGraph(factorMt,nValuest);
+	BayesNet* BN = new BayesNet(parentList,childrenList,nValuest);
 	//Get the Likelihood
 	int nNodes = mxGetNumberOfElements(NODELIKELIHOOD);
 	vector<vector<double>> nodeLikelihoodV;
@@ -58,19 +74,19 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		mwSize tsize = n*m;
 		nodeLikelihoodV[i] = vector<double>((double*) mxGetPr(mxGetCell(NODELIKELIHOOD,i)),(double*) mxGetPr(mxGetCell(NODELIKELIHOOD,i)) + tsize);
 	}
-	FG -> setNodeLikelihood(nodeLikelihoodV);
-	//Get the Tendency
-	int nTendency = mxGetNumberOfElements(FACTORTENDENCY);
-	if(nTendency != nFactors){
-		mexPrintf("Tendency Factor size mismatch");
+	BN -> setNodeLikelihood(nodeLikelihoodV);
+	//Get the CPD
+	int nCPD = mxGetNumberOfElements(CPDIN);
+	if(nCPD != nParents){
+		mexPrintf("CPD nodes size mismatch");
 		return;
 	}
-	for(int i = 0;i < nTendency;i++){
-		map<vector<int>,double> tendencyMap;
-		mwSize nDimensions = mxGetNumberOfDimensions(mxGetCell(FACTORTENDENCY,i));
-		const mwSize* d = mxGetDimensions(mxGetCell(FACTORTENDENCY,i));
-		if(nDimensions != FG -> getFactor(i) -> nodes.size()){
-			mexPrintf("Tendency Factor nodes size mismatch");
+	for(int i = 0;i < nCPD;i++){
+		map<vector<int>,double> CPDMap;
+		mwSize nDimensions = mxGetNumberOfDimensions(mxGetCell(CPDIN,i));
+		const mwSize* d = mxGetDimensions(mxGetCell(CPDIN,i));
+		if(nDimensions != BN -> getNode(i) -> nParent.size()){
+			mexPrintf("CPD node parent size mismatch");
 			return;
 		}
 		int nElements = 1;
@@ -78,9 +94,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 			nElements *= d[j];
 		}
 		for(int j = 0;j < nElements;++j){
-			tendencyMap[getNDindexFrom1D(nDimensions,d,j)] = mxGetPr(mxGetCell(FACTORTENDENCY,i))[j];
+			CPDMap[getNDindexFrom1D(nDimensions,d,j)] = mxGetPr(mxGetCell(CPD,i))[j];
 		}
-		FG -> setFactorTendency(i,tendencyMap);
+		BN -> setCPD(i,CPDMap);
 	}
 	mwSize nEvidence = mxGetNumberOfElements(EVIDENCELIST);
 	double* evidenveListPr = mxGetPr(EVIDENCELIST);
@@ -89,6 +105,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	for(int i = 0;i < nEvidence;++i){
 		evidenveList[i] = evidenveListPr[i];
 	}
-	FG -> setEvidenceList(evidenveList);
-	FG -> print();
+	BN -> setEvidenceList(evidenveList);
+	BN -> print();
 }
