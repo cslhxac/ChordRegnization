@@ -17,8 +17,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	#define EVIDENCELIST prhs[5]
 	//prhs[4] is the list of node names(optional)
 	int nParents = mxGetNumberOfElements(PARENTLIST);
-	vector<vector<double>> parentListD;
-	vector<vector<int>> parentListI;
+	vector<vector<double> > parentListD;
+	vector<vector<int> > parentListI;
 	parentListD.resize(nParents);
 	parentListI.resize(nParents);
 	for(int i = 0;i < nParents;i++){
@@ -36,8 +36,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		//assert(mxGetM(mxGetCell(prhs[0],i)) == 1);
 	}
     int nChildren = mxGetNumberOfElements(CHILDRENLIST);
-    vector<vector<double>> childrenListD;
-    vector<vector<int>> childrenListI;
+    vector<vector<double> > childrenListD;
+    vector<vector<int> > childrenListI;
     childrenListD.resize(nChildren);
     childrenListI.resize(nChildren);
     for(int i = 0;i < nChildren;i++){
@@ -70,7 +70,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	BayesNet* BN = new BayesNet(parentListI,childrenListI,nValuest);
 	//Get the Likelihood
 	int nNodes = mxGetNumberOfElements(NODELIKELIHOOD);
-	vector<vector<double>> nodeLikelihoodV;
+	vector<vector<double> > nodeLikelihoodV;
 	nodeLikelihoodV.resize(nNodes);
 	for(int i = 0;i < nNodes;i++){
 		mwSize n = mxGetN(mxGetCell(NODELIKELIHOOD,i));
@@ -89,20 +89,22 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		map<vector<int>,double> CPDMap;
 		mwSize nDimensions = mxGetNumberOfDimensions(mxGetCell(CPDIN,i));
 		const mwSize* d = mxGetDimensions(mxGetCell(CPDIN,i));
-		mexPrintf("node %i: %i %i %i %i\n",i,BN -> getNode(i) -> parents.size(),nDimensions,d[0],d[1]);
+		//mexPrintf("node %i: %i %i %i %i\n",i,BN -> getNode(i) -> parents.size(),nDimensions,d[0],d[1]);
 		if(nDimensions != 0 && d[0] != 0 && nDimensions != BN -> getNode(i) -> parents.size() + 1){
 			mexPrintf("CPD node parent size mismatch\n");
 			return;
 		}
 		int nElements = 1;
+		vector<int> dV;
+		dv.resize(nDimensions);
 		for(int j = 0;j < nDimensions;++j){
-			nElements *= d[j];
-		}
-		nElements *= BN -> getNode(i) -> nValues;	
+		  nElements *= d[j];
+		  dv[j] = d[j];
+		}	
 		for(int j = 0;j < nElements;++j){
-			CPDMap[getNDindexFrom1D(nDimensions,d,j)] = mxGetPr(mxGetCell(CPDIN,i))[j];
+		  CPDMap[getNDindexFrom1D(nDimensions,d,j)] = mxGetPr(mxGetCell(CPDIN,i))[j];
 		}
-		BN -> setCPD(i,CPDMap);
+		BN -> setCPD(i,CPDMap,nDimensions,dv,nElements);
 	}
 	mwSize nEvidence = mxGetNumberOfElements(EVIDENCELIST);
 	double* evidenveListPr = mxGetPr(EVIDENCELIST);
