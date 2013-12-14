@@ -7,14 +7,16 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	//prhs[1] is the array of number of possible values
 	//Make prhs[0] and prhs[1] DOUBLE arrays!!!!
 	//EVERY INDEX IN THOUSE MATRICES ARE STARTED FROM 0!!!!!!!!!!!!!
-    #define PARENTLIST prhs[0]
-    #define CHILDRENLIST prhs[1]
+  #define PARENTLIST prhs[0]
+  #define CHILDRENLIST prhs[1]
 	#define NODESNVALUES prhs[2]
 	//NODELIKELIHOOD is a cell array
 	#define NODELIKELIHOOD prhs[3]
-	//FACTORTENDENCY is a cell array
+	//CPDIN is a cell array
+    //Make Sure that the CPD Dimension matches the order of the parentlist and the last dimension is the node itself.
 	#define CPDIN prhs[4]
 	#define EVIDENCELIST prhs[5]
+  #define BPITR prhs[6]
 	//prhs[4] is the list of node names(optional)
 	int nParents = mxGetNumberOfElements(PARENTLIST);
 	vector<vector<double> > parentListD;
@@ -95,7 +97,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 			return;
 		}
 		int nElements = 1;
-		vector<int> dV;
+		vector<int> dv;
 		dv.resize(nDimensions);
 		for(int j = 0;j < nDimensions;++j){
 		  nElements *= d[j];
@@ -115,4 +117,15 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	}
 	BN -> setEvidenceList(evidenveList);
 	BN -> print();
+  BN -> beliefPropagation((int)mxGetScalar(BPITR));
+  mwSize dim[] = {BN -> getnNodes()};
+  plhs[0] = mxCreateCellArray(1, dim);
+  for(int i = 0;i < BN -> getnNodes();++i){
+    mxArray* vector_ptr = mxCreateDoubleMatrix(1, BN -> getNode(i) -> nValues, mxREAL);
+    double* ptr = mxGetPr(vector_ptr);
+    for(int j = 0;j < BN -> getNode(i) -> nValues;++j){
+      ptr[j] = BN -> getNode(i) -> BEL[j];
+    }
+    mxSetCell(plhs[0], i, vector_ptr);
+  }
 }
