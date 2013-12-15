@@ -8,38 +8,38 @@
 #define EPSILON 0.00000001
 using namespace std;
 int get1DindexFromND(const mwSize nDimensions,const mwSize* d,const vector<int> indices){
-	int tmp = indices[nDimensions - 1];
-	for(int i = (nDimensions - 2);i >= 0;--i){
-		tmp = tmp * d[i] + indices[i];
-	}
-	return tmp;
+  int tmp = indices[nDimensions - 1];
+  for(int i = (nDimensions - 2);i >= 0;--i){
+    tmp = tmp * d[i] + indices[i];
+  }
+  return tmp;
 }
 int get1DindexFromND(const int nDimensions,const vector<int> d,const vector<int> indices){
-	int tmp = indices[nDimensions - 1];
-	for(int i = (nDimensions - 2);i >= 0;--i){
-		tmp = tmp * d[i] + indices[i];
-	}
-	return tmp;
+  int tmp = indices[nDimensions - 1];
+  for(int i = (nDimensions - 2);i >= 0;--i){
+    tmp = tmp * d[i] + indices[i];
+  }
+  return tmp;
 }
 vector<int> getNDindexFrom1D(const mwSize nDimensions,const mwSize* d,const int indices){
-	vector<int> indicesT;
-	indicesT.resize(nDimensions);
-	int tmp = indices;
-	for(int i = 0;i < nDimensions;++i){
-		indicesT[i] = tmp%d[i];
-		tmp /= d[i];
-	}
-	return indicesT;
+  vector<int> indicesT;
+  indicesT.resize(nDimensions);
+  int tmp = indices;
+  for(int i = 0;i < nDimensions;++i){
+    indicesT[i] = tmp%d[i];
+    tmp /= d[i];
+  }
+  return indicesT;
 }
 vector<int> getNDindexFrom1D(const int nDimensions,const vector<int> d,const int indices){
-	vector<int> indicesT;
-	indicesT.resize(nDimensions);
-	int tmp = indices;
-	for(int i = 0;i < nDimensions;++i){
-		indicesT[i] = tmp%d[i];
-		tmp /= d[i];
-	}
-	return indicesT;
+  vector<int> indicesT;
+  indicesT.resize(nDimensions);
+  int tmp = indices;
+  for(int i = 0;i < nDimensions;++i){
+    indicesT[i] = tmp%d[i];
+    tmp /= d[i];
+  }
+  return indicesT;
 }
 struct Node{
   vector<Node* >* nodesRef;
@@ -72,21 +72,27 @@ struct Node{
       sum1 += lambda[i];
     }
     for(int i = 0;i < nValues;++i){
-       lambda[i] /= sum1;
+      if(sum1 > EPSILON){
+	lambda[i] /= sum1;
+      }
     }
     double sum2 = 0;
     for(int i = 0;i < nValues;++i){
       sum2 += pi[i];
     }
     for(int i = 0;i < nValues;++i){
-       pi[i] /= sum2;
+      if(sum2 > EPSILON){
+	pi[i] /= sum2;
+      }
     }
     double sum3 = 0;
     for(int i = 0;i < nValues;++i){
       sum3 += BEL[i];
     }
     for(int i = 0;i < nValues;++i){
-       BEL[i] /= sum3;
+      if(sum3 > EPSILON){
+	BEL[i] /= sum3;
+      }
     }
   }
   void initializeBeliefs(){
@@ -110,27 +116,27 @@ struct Node{
     }
   }
   void initializePi(){
-    if(parents.size() == 0 || isEvidence){
+    if(parents.size() == 0){
       pi = prior;
     }else{
       pi.resize(nValues);
       for(int i = 0;i < nValues;++i){
-	      pi[i] = 1;
+	pi[i] = 1;
       }
     }
   }
   void initalizeLambda(){
-    if(isEvidence){
+    if(children.size() == 0 && isEvidence){
       lambda = prior;
     }else{
       lambda.resize(nValues);
       for(int i = 0;i < nValues;++i){
-	      lambda[i] = 1;
+	lambda[i] = 1;
       }
     }
   }
   void computePi(){
-    if(parents.size() == 0 || isEvidence){
+    if(parents.size() == 0){
       return;
     }
     for(int i = 0;i < nValues;++i){
@@ -138,15 +144,15 @@ struct Node{
     }
     for(int i = 0;i < CPDnElements;++i){
       vector<int> values = getNDindexFrom1D(CPDnD,CPDdArray,i);
-	    double tmp = 1;
+      double tmp = 1;
       for(int j = 0;j < parents.size();++j){
-		    tmp *= (*nodesRef)[parents[j]] -> piMSG[index][values[j]];
+	tmp *= (*nodesRef)[parents[j]] -> piMSG[index][values[j]];
       }
-	    pi[values.back()] += CPD[values] * tmp;
+      pi[values.back()] += CPD[values] * tmp;
     }
   }
   void computeLambda(){
-    if(isEvidence || children.size() == 0){
+    if(children.size() == 0){
       return;
     }
     for(int i = 0;i < nValues;++i){
@@ -154,8 +160,8 @@ struct Node{
     }
     for(int i = 0;i < children.size();++i){
       for(int k = 0;k < nValues;++k){
-	      lambda[k] *= (*nodesRef)[children[i]] -> lambdaMSG[index][k];
-	    }
+	lambda[k] *= (*nodesRef)[children[i]] -> lambdaMSG[index][k];
+      }
     }
   }
   void computeBEL(){
@@ -164,9 +170,6 @@ struct Node{
     }
   }
   void computePiMSG(){
-    if(isEvidence){
-      return;
-    }
     for(int i = 0;i < children.size();++i){
       for(int j = 0;j < nValues;++j){
         if(BEL[j] < EPSILON){
@@ -186,7 +189,7 @@ struct Node{
         lambdaMSG[parents[i]][j] = 0;
       }
     }
-	  for(int i = 0;i < parents.size();++i){
+    for(int i = 0;i < parents.size();++i){
       //the iterations here assumes that the current node is the last dimension in the CPD therefore will be iterated last.
       vector<double> tmpSum((*nodesRef)[parents[i]] -> nValues);
       for(int j = 0;j < (*nodesRef)[parents[i]] -> nValues;++j){
@@ -214,7 +217,7 @@ struct Node{
           }
         }
       }
-	  }
+    }
   }
 };
 class BayesNet{
@@ -234,9 +237,12 @@ public:
     }
   };
   void beliefPropagation(int maxItr){
+    //mexPrintf("BP!!!!!!\n");
+    //mexEvalString("pause");
     for(int i = 0;i < nodes.size();++i){
       nodes[i] -> initializeBeliefs();
     }
+    //printBPState();
     for(int i = 0;i < nodes.size();++i){
       nodes[i] -> initializeLambdaMSG();
     }
@@ -245,27 +251,42 @@ public:
       //nodes[i] -> computePiMSG();
     }
     //mexPrintf("here!!!\n");
+    //mexEvalString("pause");
     //mexPrintf("(%i)\n",nodes[3] -> piMSG[2].size());
-    printBPState();
+    //printBPState();
     //return;
     for(int itr = 0;itr < maxItr;++itr){
+      //printBPState();
+      //mexPrintf("here1!!!!!\n");
+      //mexEvalString("pause");
       for(int i = 0;i < nodes.size();++i){
         nodes[i] -> computePi();
-        nodes[i] -> computeLambda();
+        //mexPrintf("here2\n");
+	nodes[i] -> computeLambda();
+	//mexPrintf("here3\n");
         nodes[i] -> computeBEL();
+	//mexPrintf("here4\n");
       }
+      //mexPrintf("here2!!!!\n");
+      //mexEvalString("pause");
       //printBPState();
       for(int i = 0;i < nodes.size();++i){
         nodes[i] -> computePiMSG();
       }
+      //mexPrintf("here3!!!!\n");
+      //mexEvalString("pause");
       for(int i = 0;i < nodes.size();++i){
         nodes[i] -> computeLambdaMSG();
       }
     }
+    //mexPrintf("here4!!!!\n");
+    //mexEvalString("pause");
     for(int i = 0;i < nodes.size();++i){
       nodes[i] -> normalizeBEL();
-    }   
-    printBPState();
+    }
+    //mexPrintf("here5!!!!\n");
+    //mexEvalString("pause");
+    //printBPState();
   }
   void setEvidenceList(const vector<int>& evidences){
     for(int i = 0;i < evidences.size();++i){
@@ -290,12 +311,12 @@ public:
       mexPrintf("Node %i:\n",i);
       mexPrintf("\tParentList:\n");
       for(int j = 0;j < nodes[i] -> parents.size();++j){
-	      mexPrintf("\t\tNode %i\n",nodes[i] -> parents[j]);
+	mexPrintf("\t\tNode %i\n",nodes[i] -> parents[j]);
       }
       mexPrintf("\n");
       mexPrintf("\tChildrenList:\n");
       for(int j = 0;j < nodes[i] -> children.size();++j){
-	      mexPrintf("\t\tNode %i\n",nodes[i] -> children[j]);
+	mexPrintf("\t\tNode %i\n",nodes[i] -> children[j]);
       } 
       mexPrintf("\n");
     }
@@ -303,7 +324,7 @@ public:
     for(int i = 0;i < nodes.size();++i){
       mexPrintf("Node %i Likelihood: ",i);
       for(int j = 0;j < nodes[i]->prior.size();++j){
-	      mexPrintf("%f ",nodes[i] -> prior[j]);
+	mexPrintf("%f ",nodes[i] -> prior[j]);
       }
       mexPrintf("\n");
     }
@@ -315,18 +336,18 @@ public:
         vector<int> d;
         d.resize(nodes[i] -> parents.size() + 1);
         for(int j = 0;j < nodes[i] -> parents.size();++j){
-	        nElements *= nodes[nodes[i] -> parents[j]] -> nValues;
-	        d[j] = nodes[nodes[i] -> parents[j]] -> nValues;
+	  nElements *= nodes[nodes[i] -> parents[j]] -> nValues;
+	  d[j] = nodes[nodes[i] -> parents[j]] -> nValues;
         }
-	      nElements *= nodes[i] -> nValues;
-	      d[nodes[i] -> parents.size()] = nodes[i] -> nValues;
+	nElements *= nodes[i] -> nValues;
+	d[nodes[i] -> parents.size()] = nodes[i] -> nValues;
         for(int j = 0;j < nElements;++j){
-	        vector<int> indices = getNDindexFrom1D(nodes[i] -> parents.size() + 1,d,j);
-	        mexPrintf("<");
-	        for(int k = 0;k < indices.size();++k){
-	          mexPrintf("%i ",indices[k]);
-	        }
-	        mexPrintf(">: %f\n",nodes[i] -> CPD[indices]);
+	  vector<int> indices = getNDindexFrom1D(nodes[i] -> parents.size() + 1,d,j);
+	  mexPrintf("<");
+	  for(int k = 0;k < indices.size();++k){
+	    mexPrintf("%i ",indices[k]);
+	  }
+	  mexPrintf(">: %f\n",nodes[i] -> CPD[indices]);
         }
       }
     }
@@ -374,7 +395,7 @@ private:
   void resetPrior(){
     for(int i = 0;i < nodes.size();++i){
       if(!nodes[i] -> isEvidence){
-	      nodes[i] -> prior.assign(nodes[i] -> prior.size(),1);
+	nodes[i] -> prior.assign(nodes[i] -> prior.size(),1);
       }
     }
   }

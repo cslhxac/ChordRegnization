@@ -126,7 +126,7 @@ tmp = zeros(size(y_new));
 tmp(1:size(a,2)) = a;
 wavwrite(y_new/2 + tmp/2,Fs,'v1.wav');
 
-addpath 'bnt/'
+addpath 'bnt_C/'
 
 
 
