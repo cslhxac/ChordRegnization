@@ -49,10 +49,8 @@ for i = 1:size(Ct,2)
     i
     prior{3} = Ct(:,i);
     BEL = CreateFactorGraph(parentList,childrenList,nValues,prior,CPD,EL,5);
-    i
     [C,Index] = max(BEL{2}(:));
     chordwBass(:,i) = chordClasses(Index).Signature;
 end
 
 end
-

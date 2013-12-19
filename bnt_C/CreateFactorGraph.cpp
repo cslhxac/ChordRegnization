@@ -3,6 +3,8 @@
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
+  //mexPrintf("mex called\n");
+  //mexEvalString("pause (0.01)");
   //prhs[0] is the factor matrix cell array
   //prhs[1] is the array of number of possible values
   //Make prhs[0] and prhs[1] DOUBLE arrays!!!!
@@ -82,9 +84,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   }
   BN -> setNodeLikelihood(nodeLikelihoodV);
   //Get the CPD
+  //mexPrintf("Loading CPD\n");
   int nCPD = mxGetNumberOfElements(CPDIN);
   if(nCPD != nParents){
-    mexPrintf("CPD nodes size mismatch");
+    mexPrintf("%i,%i CPD nodes size mismatch\n",nCPD,nParents);
     return;
   }
   for(int i = 0;i < nCPD;i++){
@@ -93,7 +96,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     const mwSize* d = mxGetDimensions(mxGetCell(CPDIN,i));
     //mexPrintf("node %i: %i %i %i %i\n",i,BN -> getNode(i) -> parents.size(),nDimensions,d[0],d[1]);
     if(nDimensions != 0 && d[0] != 0 && nDimensions != BN -> getNode(i) -> parents.size() + 1){
-      mexPrintf("CPD node parent size mismatch\n");
+      mexPrintf("%i CPD node parent size mismatch\n",i);
       return;
     }
     int nElements = 1;
@@ -108,6 +111,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     }
     BN -> setCPD(i,CPDMap,nDimensions,dv,nElements);
   }
+  //mexPrintf("Loading CPD finished\n");
   mwSize nEvidence = mxGetNumberOfElements(EVIDENCELIST);
   double* evidenveListPr = mxGetPr(EVIDENCELIST);
   vector<int> evidenveList;
@@ -117,6 +121,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   }
   BN -> setEvidenceList(evidenveList);
   //BN -> print();
+  //mexPrintf("construction finished\n");
+  //mexEvalString("pause (0.01)");
   BN -> beliefPropagation((int)mxGetScalar(BPITR));
   mwSize dim[] = {BN -> getnNodes()};
   plhs[0] = mxCreateCellArray(1, dim);

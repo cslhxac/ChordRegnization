@@ -3,6 +3,7 @@
 #include<iostream>
 #include<cstring>
 #include <mex.h>
+#include <cmath>
 #ifndef BAYESNET
 #define BAYESNET
 #define EPSILON 0.00000001
@@ -55,7 +56,7 @@ struct Node{
   vector<int> parents;
   vector<int> children;
   vector<double> pi;
-  vector<double> lambda;
+  vector<double> logLambda;
   vector<double> BEL;
   //The key for the folling funtion is the global index of the node in the Bayes Net.
   map<int,vector<double> > piMSG;
@@ -67,31 +68,13 @@ struct Node{
     }
   }
   void normalizeBEL(){
-    double sum1 = 0;
-    for(int i = 0;i < nValues;++i){
-      sum1 += lambda[i];
-    }
-    for(int i = 0;i < nValues;++i){
-      if(sum1 > EPSILON){
-	lambda[i] /= sum1;
-      }
-    }
-    double sum2 = 0;
-    for(int i = 0;i < nValues;++i){
-      sum2 += pi[i];
-    }
-    for(int i = 0;i < nValues;++i){
-      if(sum2 > EPSILON){
-	pi[i] /= sum2;
-      }
-    }
     double sum3 = 0;
     for(int i = 0;i < nValues;++i){
       sum3 += BEL[i];
     }
     for(int i = 0;i < nValues;++i){
       if(sum3 > EPSILON){
-	BEL[i] /= sum3;
+	      BEL[i] /= sum3;
       }
     }
   }
@@ -112,7 +95,9 @@ struct Node{
   void initializeLambdaMSG(){
     for(int i = 0;i < parents.size();++i){
       lambdaMSG[parents[i]] = vector<double>((*nodesRef)[parents[i]] -> nValues);
-      lambdaMSG[parents[i]] = (*nodesRef)[parents[i]] -> lambda;
+      for(int j = 0;j < (*nodesRef)[parents[i]] -> logLambda.size();++j){
+        lambdaMSG[parents[i]][j] = exp((*nodesRef)[parents[i]] -> logLambda[j]);
+      }
     }
   }
   void initializePi(){
@@ -121,17 +106,19 @@ struct Node{
     }else{
       pi.resize(nValues);
       for(int i = 0;i < nValues;++i){
-	pi[i] = 1;
+	      pi[i] = 1.0;
       }
     }
   }
   void initalizeLambda(){
-    if(children.size() == 0 && isEvidence){
-      lambda = prior;
+    logLambda.resize(nValues);
+    if(children.size() == 0){
+      for(int i = 0;i < prior.size();++i){
+        logLambda[i] = log(prior[i]);
+      }
     }else{
-      lambda.resize(nValues);
       for(int i = 0;i < nValues;++i){
-	lambda[i] = 1;
+	      logLambda[i] = log(1.0);
       }
     }
   }
@@ -142,11 +129,12 @@ struct Node{
     for(int i = 0;i < nValues;++i){
       pi[i] = 0;
     }
+    #pragma omp for
     for(int i = 0;i < CPDnElements;++i){
       vector<int> values = getNDindexFrom1D(CPDnD,CPDdArray,i);
       double tmp = 1;
       for(int j = 0;j < parents.size();++j){
-	tmp *= (*nodesRef)[parents[j]] -> piMSG[index][values[j]];
+	      tmp *= (*nodesRef)[parents[j]] -> piMSG[index][values[j]];
       }
       pi[values.back()] += CPD[values] * tmp;
     }
@@ -156,20 +144,25 @@ struct Node{
       return;
     }
     for(int i = 0;i < nValues;++i){
-      lambda[i] = 1; 
+      logLambda[i] = log(1.0); 
     }
+    #pragma omp for
     for(int i = 0;i < children.size();++i){
       for(int k = 0;k < nValues;++k){
-	lambda[k] *= (*nodesRef)[children[i]] -> lambdaMSG[index][k];
+	      logLambda[k] += log((*nodesRef)[children[i]] -> lambdaMSG[index][k]);
+        if(index == 0){
+          //mexPrintf("%f\n",logLambda[k]);
+        } 
       }
     }
   }
   void computeBEL(){
     for(int i = 0;i < nValues;++i){
-      BEL[i] = lambda[i] * pi[i];
+      BEL[i] = exp(logLambda[i]) * pi[i];
     }
   }
   void computePiMSG(){
+    #pragma omp for
     for(int i = 0;i < children.size();++i){
       for(int j = 0;j < nValues;++j){
         if(BEL[j] < EPSILON){
@@ -184,11 +177,13 @@ struct Node{
     }
   }
   void computeLambdaMSG(){
+    #pragma omp for
     for(int i = 0;i < parents.size();++i){
       for(int j = 0;j < (*nodesRef)[parents[i]] -> nValues;++j){
         lambdaMSG[parents[i]][j] = 0;
       }
     }
+    #pragma omp for
     for(int i = 0;i < parents.size();++i){
       //the iterations here assumes that the current node is the last dimension in the CPD therefore will be iterated last.
       vector<double> tmpSum((*nodesRef)[parents[i]] -> nValues);
@@ -212,7 +207,7 @@ struct Node{
           //mexPrintf("J change %i, for node %i\n",j,index);
           //change of value of the current node.
           for(int k = 0;k < (*nodesRef)[parents[i]] -> nValues;++k){
-            lambdaMSG[parents[i]][k] += lambda[values.back()] * tmpSum[k];
+            lambdaMSG[parents[i]][k] += exp(logLambda[values.back()]) * tmpSum[k];
             tmpSum[k] = 0;
           }
         }
@@ -256,16 +251,18 @@ public:
     //printBPState();
     //return;
     for(int itr = 0;itr < maxItr;++itr){
+      //mexPrintf("%i\n",itr);
+      //mexEvalString("pause (0.01)");
       //printBPState();
       //mexPrintf("here1!!!!!\n");
       //mexEvalString("pause");
       for(int i = 0;i < nodes.size();++i){
         nodes[i] -> computePi();
         //mexPrintf("here2\n");
-	nodes[i] -> computeLambda();
-	//mexPrintf("here3\n");
+	      nodes[i] -> computeLambda();
+	      //mexPrintf("here3\n");
         nodes[i] -> computeBEL();
-	//mexPrintf("here4\n");
+	      //mexPrintf("here4\n");
       }
       //mexPrintf("here2!!!!\n");
       //mexEvalString("pause");
@@ -364,7 +361,7 @@ public:
       mexPrintf("\b)\n");
       mexPrintf("\tLambda :(");
       for(int j = 0;j < nodes[i] -> nValues;++j){
-        mexPrintf("%f,",nodes[i] -> lambda[j]);
+        mexPrintf("%f,",exp(nodes[i] -> logLambda[j]));
       }
       mexPrintf("\b)\n");
       mexPrintf("\tBEL :(");

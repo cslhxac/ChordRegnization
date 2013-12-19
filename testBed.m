@@ -83,10 +83,10 @@ for j = 1:12;
         Cb_sync(j,m) = median(Cb(j,beat(m):(beat(m+1)-1)));
     end
 end
-
+Cb_max = max(Cb(:));
 for m = 1:size(beat,2) - 1
-	Cb_sync(1:12,m) = Cb_sync(1:12,m) / max(Cb_sync(1:12,m));
-    Cb_sync(13,m) = (sum(Cb_sync(1:12,m)) / max(Cb_sync(1:12,m)))^2/12;
+    Cb_sync(13,m) = max(Cb_sync(1:12,m));
+	Cb_sync(1:12,m) = Cb_sync(1:12,m) / max(Cb_sync(1:12,m)); 
 end
 
 Ct_sync(isnan(Ct_sync)) = 0;
@@ -127,6 +127,7 @@ tmp(1:size(a,2)) = a;
 wavwrite(y_new/2 + tmp/2,Fs,'v1.wav');
 
 addpath 'bnt_C/'
-
+[ chordwBass ] = simpleBN(chordClasses,Cb_sync,Ct_sync,keyMajor,keyMinor)
+[ chordNames chord bass ] = BN(chordClasses,Cb_sync,Cb_max,Ct_sync,keyMajor,keyMinor);
 
 
