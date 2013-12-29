@@ -134,4 +134,5 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     }
     mxSetCell(plhs[0], i, vector_ptr);
   }
+  delete BN;
 }

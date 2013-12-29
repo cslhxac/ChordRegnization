@@ -6,7 +6,7 @@
 #include <cmath>
 #ifndef BAYESNET
 #define BAYESNET
-#define EPSILON 0.00000001
+#define EPSILON 0.0000000001
 using namespace std;
 int get1DindexFromND(const mwSize nDimensions,const mwSize* d,const vector<int> indices){
   int tmp = indices[nDimensions - 1];
@@ -68,6 +68,24 @@ struct Node{
     }
   }
   void normalizeBEL(){
+    double sum1= 0;
+    for(int i = 0;i < nValues;++i){
+      sum1 += pi[i];
+    }
+    for(int i = 0;i < nValues;++i){
+      if(sum1 > EPSILON){
+	      pi[i] /= sum1;
+      }
+    }
+    double sum2= 0;
+    for(int i = 0;i < nValues;++i){
+      sum2 += exp(logLambda[i]);
+    }
+    for(int i = 0;i < nValues;++i){
+      if(sum2 > EPSILON){
+	      logLambda[i] -= log(sum2);
+      }
+    }
     double sum3 = 0;
     for(int i = 0;i < nValues;++i){
       sum3 += BEL[i];
@@ -150,9 +168,9 @@ struct Node{
     for(int i = 0;i < children.size();++i){
       for(int k = 0;k < nValues;++k){
 	      logLambda[k] += log((*nodesRef)[children[i]] -> lambdaMSG[index][k]);
-        if(index == 0){
-          //mexPrintf("%f\n",logLambda[k]);
-        } 
+        //if(index == 0){
+          //mexPrintf("k:%i, lambdaMSG: %f\n",k ,(*nodesRef)[children[i]] -> lambdaMSG[index][k]);
+        //} 
       }
     }
   }
@@ -171,6 +189,9 @@ struct Node{
           if((*nodesRef)[children[i]] -> lambdaMSG[index][j] < EPSILON){
             mexPrintf("ZERO LAMBDA MSG\n");
           }
+          //if(index == 8){
+          //  mexPrintf("children %i: BEL %i: %f, lamvdaMSG%f\n", children[i],j,BEL[j],(*nodesRef)[children[i]] -> lambdaMSG[index][j]);
+          //}
           piMSG[children[i]][j] = BEL[j]/((*nodesRef)[children[i]] -> lambdaMSG[index][j]);
         }
       }
@@ -212,6 +233,17 @@ struct Node{
           }
         }
       }
+      //normalize
+      double sum = 0;
+      for(int j = 0;j < (*nodesRef)[parents[i]] -> nValues;++j){
+        sum += lambdaMSG[parents[i]][j];
+      }
+      //if(parents[i] == 0){
+        //mexPrintf("lambdaMSG sum from %i: %f\n",index,sum);
+      //}
+      for(int j = 0;j < (*nodesRef)[parents[i]] -> nValues;++j){
+        lambdaMSG[parents[i]][j] /= sum;
+      }
     }
   }
 };
@@ -251,8 +283,8 @@ public:
     //printBPState();
     //return;
     for(int itr = 0;itr < maxItr;++itr){
-      //mexPrintf("%i\n",itr);
-      //mexEvalString("pause (0.01)");
+      mexPrintf("%i\n",itr);
+      mexEvalString("pause (0.01)");
       //printBPState();
       //mexPrintf("here1!!!!!\n");
       //mexEvalString("pause");
@@ -262,6 +294,7 @@ public:
 	      nodes[i] -> computeLambda();
 	      //mexPrintf("here3\n");
         nodes[i] -> computeBEL();
+        nodes[i] -> normalizeBEL();
 	      //mexPrintf("here4\n");
       }
       //mexPrintf("here2!!!!\n");
@@ -272,9 +305,11 @@ public:
       }
       //mexPrintf("here3!!!!\n");
       //mexEvalString("pause");
+      //printBPState(6);
       for(int i = 0;i < nodes.size();++i){
         nodes[i] -> computeLambdaMSG();
       }
+      //printBPState();
     }
     //mexPrintf("here4!!!!\n");
     //mexEvalString("pause");
@@ -325,7 +360,7 @@ public:
       }
       mexPrintf("\n");
     }
-    mexPrintf("CPD\n");
+    /*mexPrintf("CPD\n");
     for(int i = 0;i < nodes.size();++i){
       if(nodes[i] -> parents.size() > 0){
         mexPrintf("node %i CPD: \n",i);
@@ -347,7 +382,7 @@ public:
 	  mexPrintf(">: %f\n",nodes[i] -> CPD[indices]);
         }
       }
-    }
+    }*/
   }
 
   void printBPState(){
@@ -386,6 +421,42 @@ public:
         mexPrintf("\b)\n");
       }
     }
+  }
+  void printBPState(int index){
+    mexPrintf("BPState!!!\n");
+    int i = index;
+      mexPrintf("Node %i:\n",i);
+      mexPrintf("\tPi :(");
+      for(int j = 0;j < nodes[i] -> nValues;++j){
+        mexPrintf("%f,",nodes[i] -> pi[j]);
+      }
+      mexPrintf("\b)\n");
+      mexPrintf("\tLambda :(");
+      for(int j = 0;j < nodes[i] -> nValues;++j){
+        mexPrintf("%f,",exp(nodes[i] -> logLambda[j]));
+      }
+      mexPrintf("\b)\n");
+      mexPrintf("\tBEL :(");
+      for(int j = 0;j < nodes[i] -> nValues;++j){
+        mexPrintf("%f,",nodes[i] -> BEL[j]);
+      }
+      mexPrintf("\b)\n");
+      mexPrintf("\tPiMSG:\n");
+      for(int k = 0;k < nodes[i] -> children.size();++k){
+        mexPrintf("\t\tPi %i:(",nodes[i] -> children[k]);
+        for(int j = 0;j < nodes[i] -> nValues;++j){
+          mexPrintf("%f,",nodes[i] -> piMSG[nodes[i] -> children[k]][j]);
+        }
+        mexPrintf("\b)\n");
+      }
+      mexPrintf("\tLambdaMSG:\n");
+      for(int k = 0;k < nodes[i] -> parents.size();++k){
+        mexPrintf("\t\tLambda %i:(",nodes[i] -> parents[k]);
+        for(int j = 0;j < nodes[nodes[i] -> parents[k]] -> nValues;++j){
+          mexPrintf("%f,",nodes[i] -> lambdaMSG[nodes[i] -> parents[k]][j]);
+        }
+        mexPrintf("\b)\n");
+      }
   }
 private:
   vector<Node*> nodes;

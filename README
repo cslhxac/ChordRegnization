@@ -1,0 +1,12 @@
+[ chordNames chord bass ] = ChordDetection( audioFileName, MidiOutput);
+Input:
+audioFileName is a wav or mp3 file directory.
+MidiOutput is the file name to the synthesised MIDI based on the detected chord
+audioOutput is the file name for generating a wav file that conbines the synthesised MIDI with the input audio
+Output:
+chordNames are the names of chords of each time slice
+chord are the signature of chords of each time slice
+bass are the bass notes played in each time slice if present
+
+MISC:
+The function will compile the Belief Propagation c++ file using mex command.
